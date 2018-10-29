@@ -358,6 +358,7 @@ namespace mav_control_attitude {
 
 int main(int argc, char **argv)
 {
+      google::InitGoogleLogging(argv[0]);
     ros::init(argc, argv, "attitude_mpc_ctl");
 
     // fully initialize the node
