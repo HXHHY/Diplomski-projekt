@@ -358,7 +358,6 @@ namespace mav_control_attitude {
 
 int main(int argc, char **argv)
 {
-
     ros::init(argc, argv, "attitude_mpc_ctl");
 
     // fully initialize the node

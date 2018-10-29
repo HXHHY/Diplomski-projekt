@@ -42,9 +42,9 @@ namespace mav_control_attitude {
     }
 
     bool MPCAttitudeController::SolveMyOptimizationProblem(ceres::Problem& problem) {
-      CHECK(problem == NULL) return false;
+      //CHECK(&problem == NULL) return false;
       
-      \\Setting bounderies
+      //Setting bounderies
       problem_upper_bounderies = control_commands_temp_;
       problem_lower_bounderies = control_commands_temp_;
       for(int j = 0; j< kPredictionHorizonSteps; j++){
@@ -545,11 +545,11 @@ namespace mav_control_attitude {
       // YOLO Eigen::Map<Eigen::Matrix<double, kDisturbanceSize, 1>>(const_cast<double*>(params_.d  ))    = estimated_disturbances_;
       // YOLO Eigen::Map<Eigen::Matrix<double, kInputSize,       1>>(const_cast<double*>(params_.u_prev)) = control_commands_temp_;
 
-      cost1.set_disturbance(estimated_disturbances_);
-      cost1.set_x_ss(target_state);
-      cost1.set_u_ss(target_input);
-      cost1.set_u_past(control_commands_temp_);
-      cost1.set_x0_(current_state);
+      cost1->set_disturbance(estimated_disturbances_);
+      cost1->set_x_ss(target_state);
+      cost1->set_u_ss(target_input);
+      cost1->set_u_past(control_commands_temp_);
+      cost1->set_x0_(current_state);
 
       // fill the extern structure for the solver
       // YOLO settings = settings_;

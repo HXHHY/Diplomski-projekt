@@ -24,7 +24,7 @@
 
 // CVXGEN solver
 // YOLO #include <morus_control/solver.h>
-#include <ceres_mpc/mpc_mm_ceres.h>
+#include <morus_control/mpc_mm_ceres.h>
 namespace mav_control_attitude {
 
     constexpr int combined_control_mpc_use_ = 1;  // still working with moving masses

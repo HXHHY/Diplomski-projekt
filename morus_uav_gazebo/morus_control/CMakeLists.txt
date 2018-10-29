@@ -28,17 +28,36 @@ endif()
 
 find_package(cmake_modules REQUIRED)
 
-# enable the use of Eigen
+find_package(cmake_modules REQUIRED)
 find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIRS} )
+find_package(Ceres REQUIRED)
+
+include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${CERES_INCLUDE_DIRS})
+
+add_definitions(${EIGEN_DEFINITIONS})
 
 # dynamic reconfigurer
 generate_dynamic_reconfigure_options(config/LinearMPC.cfg)
 include_directories(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
 
 catkin_package(
-    INCLUDE_DIRS include lib src config
+    INCLUDE_DIRS 
+        include 
+        lib 
+        src 
+        config
+        ${catkin_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
+        ${CERES_INCLUDE_DIRS}
     LIBRARIES morus_control
+    CATKIN_DEPENDS
+        roscpp
+    DEPENDS
+        cmake_modules
+        Eigen3
+        Ceres 
 )
 
 include_directories(
@@ -56,6 +75,17 @@ install(DIRECTORY launch
 #############
 # LIBRARIES #
 #############
+
+add_library(mpc_mm_ceres
+        src/mpc_mm_ceres.cpp
+        include/morus_control/mpc_mm_ceres.h
+
+)
+
+target_link_libraries(mpc_mm_ceres
+ ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EIGEN_LIBRARIES}
+)
+
 
 # convex solver - CVXGEN
 add_library(cvxgen_solver_moving_masses
@@ -78,6 +108,7 @@ add_library(attitude_ctl_mpc_ceres
         src/attitude_mpc_ctl_ceres.cpp
         src/steady_state_calculation.cpp
         src/KFDisturbanceObserver.cpp
+        #include/morus_control/attitude_ctl_mpc_ceres.h
 )
 
 
@@ -85,9 +116,7 @@ add_dependencies(attitude_ctl_mpc
         cvxgen_solver_moving_masses
 )
 
-add_dependencies(attitude_ctl_mpc_ceres
-        mpc_mm_ceres
-)
+
 
 target_link_libraries(attitude_ctl_mpc
         cvxgen_solver_moving_masses

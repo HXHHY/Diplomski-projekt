@@ -6,14 +6,12 @@ import rospy
 from pid import PID
 from geometry_msgs.msg import Vector3, PoseWithCovarianceStamped, PoseStamped, TwistStamped
 from std_msgs.msg import Float32
-from std_msgs.msg import Float64
 from dynamic_reconfigure.server import  Server
 from morus_msgs.cfg import MavZCtlParamsConfig
 from morus_msgs.msg import PIDController
 from sensor_msgs.msg import Imu
 from mav_msgs.msg import Actuators
 import math
-import numpy as np
 
 class HeightControl:
     '''
@@ -44,11 +42,6 @@ class HeightControl:
         self.z_ref_filt = 0             # z ref filtered
         self.z_mv = 0                   # z-position measured value
         self.pid_z = PID()              # pid instance for z control
-        self.mid_roll = PID()
-        self.mid_pitch = PID()
-        self.roll_fb = 0
-        self.pitch_fb = 0
-        self.my_max = 0.0
 
         self.vz_sp = 0                  # vz velocity set_point
         self.vz_mv = 0                   # vz velocity measured value
@@ -66,14 +59,6 @@ class HeightControl:
         self.pid_z.set_kp(4.0) # 0.5
         self.pid_z.set_ki(0.02) # 0.01
         self.pid_z.set_kd(0.75)
-        
-        self.mid_roll.set_kp(0.0)
-        self.mid_roll.set_ki(-1.2)
-        self.mid_roll.set_kd(0.0)
-        
-        self.mid_pitch.set_kp(0.0)
-        self.mid_pitch.set_ki(-1.2)
-        self.mid_pitch.set_kd(0.0)
 
         # Add parameters for vz controller
         self.pid_vz.set_kp(25.0)# 20, 87.2)
@@ -107,8 +92,6 @@ class HeightControl:
         rospy.Subscriber('pos_ref', Vector3, self.pos_ref_cb)
         rospy.Subscriber('euler_ref', Vector3, self.euler_ref_cb)
         rospy.Subscriber('imu', Imu, self.ahrs_cb)
-        rospy.Subscriber('movable_mass_3_position_controller/command', Float64, self.roll_mid_cb)
-        rospy.Subscriber('movable_mass_0_position_controller/command', Float64, self.pitch_mid_cb)
 
         self.pub_pid_z = rospy.Publisher('pid_z', PIDController, queue_size=1)
         self.pub_pid_vz = rospy.Publisher('pid_vz', PIDController, queue_size=1)
@@ -175,7 +158,7 @@ class HeightControl:
 		  mot_speed2 = self.mot_speed - self.dwz
 		  mot_speed3 = self.mot_speed + self.dwz
 		  mot_speed4 = self.mot_speed - self.dwz
-		  mot_speed_msg.angular_velocities = [mot_speed1+self.mid_pitch.compute(0, self.pitch_fb, dt) , mot_speed2 - self.mid_roll.compute(0, self.roll_fb, dt), mot_speed3-self.mid_pitch.compute(0, self.pitch_fb, dt), mot_speed4 + self.mid_roll.compute(0, self.roll_fb, dt)]
+		  mot_speed_msg.angular_velocities = [mot_speed1, mot_speed2, mot_speed3, mot_speed4]
 		  self.pub_mot.publish(mot_speed_msg)
 	      else:
 		  # gas motors are used to control attitude
@@ -218,27 +201,6 @@ class HeightControl:
         :param msg: Type Vector3
         '''
         self.z_sp = msg.z
-        
-    def roll_mid_cb(self, msg):
-        self.roll_fb = msg.data
-        if(self.my_max < np.abs(msg.data)):
-            self.my_max = msg.data
-        
-        #print "*******>>   " , self.my_max
-        #self.roll_fb = 0
-        if np.abs(self.roll_fb) < 0.0001:
-            self.roll_fb = 0
-
-        
-        
-    def pitch_mid_cb(self, msg):
-        self.pitch_fb = msg.data
-        #self.pitch_fb = 0
-        if(self.my_max < np.abs(msg.data)):
-            self.my_max = msg.data
-        if np.abs(self.pitch_fb) < 0.0001:
-            self.pitch_fb = 0
-       
 
     def ahrs_cb(self, msg):
         '''

@@ -4,7 +4,6 @@
 // author: Luka Pevec
 
 #include <morus_control/attitude_mpc_ctl.h>
-using namespace std; 
 
 namespace mav_control_attitude {
     MPCAttitudeController::MPCAttitudeController(const ros::NodeHandle& nh,
@@ -185,16 +184,9 @@ namespace mav_control_attitude {
         setup_indexing();
         settings_ = settings;
         params_ = params;
-        settings_.resid_tol = 0.0001;
         settings_.verbose = 0; // don't show every outcome of computation
-        settings_.max_iters = 8;  // reduce the maximum iteration count, to assure quickness over accuracy.
-        //cout << "A" << endl;
-        //cout << model_A_ << endl;
-        //cout << "B" << endl;
-        //cout << model_B_ << endl;
-        //cout << "Bd" << endl;
-        //cout << model_Bd_ << endl;
-        
+        settings_.max_iters = 5;  // reduce the maximum iteration count, to assure quickness over accuracy.
+
         // parameters A, B, Bd for CVXGEN set
         Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.A), kStateSize, kStateSize) =        model_A_;
         Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.B), kStateSize, kInputSize) =        model_B_;
@@ -268,19 +260,11 @@ namespace mav_control_attitude {
       Eigen::MatrixXd temporary_matrix = model_B_.transpose() * Q_final * model_B_ + R;
       LQR_K_ = temporary_matrix.inverse() * (model_B_.transpose() * Q_final * model_A_);
 
-      //cout << "Q"  << endl;
-      //cout << Q << endl;
-      //cout << "P" << endl;
-      //cout << Q_final << endl;
-      //cout << "R" << endl;
-      //cout << R << endl;
-      //cout << "R_delta" << endl;
-      //cout << 100*R_delta << endl;
       // parameters Q, P, R, R_delta for CVXGEN set
       Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.Q), kStateSize, kStateSize) = Q;
       Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.P), kStateSize, kStateSize) = Q_final;
       Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.R), kInputSize, kInputSize) = R;
-      Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.R_delta), kInputSize, kInputSize) = 100*R_delta;
+      Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.R_delta), kInputSize, kInputSize) = R_delta;
 
       // constraints for CVXGEN solver set
       // state constraints TODO how to make work
@@ -300,8 +284,7 @@ namespace mav_control_attitude {
       params_.x_min[4] = -params_.x_max[4];
       params_.x_min[5] = -params_.x_max[5];
       */
-      //cout << "constraint " << endl;
-      //cout << lm_/2 - 0.01 << endl; 
+
       // input constraints
       params_.u_max[0] = lm_/2 - 0.01;
       params_.u_max[1] = lm_/2 - 0.01;
@@ -466,11 +449,7 @@ namespace mav_control_attitude {
       if (!getControllerName().compare("Pitch controller") && verbose_){
         ROS_INFO_STREAM("target_states = \n" << target_state);
       }
-      //cout << "x_ss target state" << endl;
-      //cout << target_state << endl;
-      //cout << "u_ss target input" << endl;
-      //cout << target_input << endl;
-      
+
       // fill in the structure for CVXGEN solver - x_ss[t], u_ss, x_0, d, u_prev
       for (int i = 1; i < 11; i++) {
         Eigen::Map<Eigen::Matrix<double, kStateSize, 1>>(const_cast<double*>(params_.x_ss[i])) = target_state;
@@ -478,12 +457,7 @@ namespace mav_control_attitude {
       for (int i = 0; i < 10; i++) {
         Eigen::Map<Eigen::Matrix<double, kInputSize, 1>>(const_cast<double*>(params_.u_ss[i])) = target_input;
       }
-      //cout << "x0 current state" << endl;
-      //cout << current_state << endl;
-      //cout << "d estimated dsturbance " << endl;
-      //cout << estimated_disturbances_ << endl;
-      //cout << "u previous" << endl;
-      //cout << control_commands_temp_ << endl;
+
       Eigen::Map<Eigen::Matrix<double, kStateSize,       1>>(const_cast<double*>(params_.x_0))    = current_state;
       Eigen::Map<Eigen::Matrix<double, kDisturbanceSize, 1>>(const_cast<double*>(params_.d  ))    = estimated_disturbances_;
       Eigen::Map<Eigen::Matrix<double, kInputSize,       1>>(const_cast<double*>(params_.u_prev)) = control_commands_temp_;
