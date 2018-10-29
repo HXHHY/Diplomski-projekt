@@ -152,6 +152,9 @@ class MPCAttitudeController {
     MPC_cost*  cost1;
     double x[kPredictionHorizonSteps];
     ceres::Problem problem;
+    ceres::Solver::Options options;
+      
+    ceres::Solver::Summary summary;
     // ros node handles
     ros::NodeHandle nh_, private_nh_;
 

@@ -33,7 +33,25 @@ namespace mav_control_attitude {
     }
 
     MPCAttitudeController::~MPCAttitudeController() { }
+    bool MPCAttitudeController::setSolverParameterSettings(){
+        options.max_num_iterations = 1000;
+        options.linear_solver_type = ceres::DENSE_QR;
+        options.minimizer_progress_to_stdout = false;
+    
+    }
 
+    bool MPCAttitudeController::SolveMyOptimizationProblem(ceres::Problem& problem) {
+      //CHECK(problem != NULL);
+
+      // Run the solver!
+
+      ceres::Solve(options, &problem, &summary);
+
+      //std::cout << summary.FullReport() << '\n';
+      //std::cout << summary.BriefReport() << '\n';
+    //std::cout << summary.IsSolutionUsable() << '\n';
+      return summary.IsSolutionUsable();
+    }
 /**
     Set the matrices of the system dynamics model_A, model_B and model_Bd
     TODO Cound be done with Yaml file !!!
