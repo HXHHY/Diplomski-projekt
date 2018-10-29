@@ -390,6 +390,10 @@ namespace mav_control_attitude {
         ROS_INFO_STREAM("Closed loop dynamics = \n" << closed_loop_dynamics);
         ROS_INFO_STREAM("Closed loop eigenvalues absolute value (needed <1) = \n" << closed_loop_dynamics.eigenvalues().cwiseAbs());
       }
+      
+      cost1 = new MPC_cost(  model_A_,  model_B_,  model_Bd_,  Q, Q_final,
+                              R,  R_delta, estimated_disturbances_, kStateSize, kPredictionHorizonSteps);
+      problem.AddResidualBlock(cost1, NULL, x);
     }
 
     void MPCAttitudeController::calculateControlCommand(
@@ -538,6 +542,12 @@ namespace mav_control_attitude {
       // YOLO Eigen::Map<Eigen::Matrix<double, kStateSize,       1>>(const_cast<double*>(params_.x_0))    = current_state;
       // YOLO Eigen::Map<Eigen::Matrix<double, kDisturbanceSize, 1>>(const_cast<double*>(params_.d  ))    = estimated_disturbances_;
       // YOLO Eigen::Map<Eigen::Matrix<double, kInputSize,       1>>(const_cast<double*>(params_.u_prev)) = control_commands_temp_;
+
+      cost1.set_disturbance(estimated_disturbances_);
+      cost1.set_x_ss(target_state);
+      cost1.set_u_ss(target_input);
+      cost1.set_u_past(control_commands_temp_);
+      cost1.set_x0_(current_state);
 
       // fill the extern structure for the solver
       // YOLO settings = settings_;
