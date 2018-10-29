@@ -150,7 +150,7 @@ class MPCAttitudeController {
  private:
  
     MPC_cost*  cost1;
-    double x[4*kPredictionHorizonSteps];
+    double x[4*kPredictionHorizonSteps]={};
     ceres::Problem problem;
     ceres::Solver::Options options;
       
