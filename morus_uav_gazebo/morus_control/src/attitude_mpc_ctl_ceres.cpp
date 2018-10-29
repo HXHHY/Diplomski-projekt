@@ -529,13 +529,15 @@ namespace mav_control_attitude {
       // YOLO solver_status_ = (int) solve();
       // publish the solver status
       std_msgs::Int64 solver_status_msg;
-      solver_status_msg.data = 1; // YOLO solver_status_;
+      bool solution_found = SolveMyOptimizationProblem(problem);
+      solver_status_msg.data = 0; 
+      if(solution_found) solver_status_msg.data = 1;
       MPC_solver_status_pub_.publish(solver_status_msg);
 
       control_commands_temp_.setZero(); // reset the msg for input signals
-      int YOLO = 1;
-      // YOLO if (solver_status_ >= 0){ // solution found
-      if (YOLO >= 0){
+      
+      if (solution_found){ // solution found
+
         if (combined_control_mpc_use_) {
           // CC_MPC has 4 input variables
           // YOLO control_commands_temp_ << vars.u_0[0], vars.u_0[1], vars.u_0[2], vars.u_0[3];
