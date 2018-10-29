@@ -24,7 +24,7 @@
 
 // CVXGEN solver
 // YOLO #include <morus_control/solver.h>
-
+#include <ceres_mpc/mpc_mm_ceres.h>
 namespace mav_control_attitude {
 
     constexpr int combined_control_mpc_use_ = 1;  // still working with moving masses
@@ -144,7 +144,14 @@ class MPCAttitudeController {
 //If you define a structure having members of fixed-size vectorizable Eigen types, you must overload its "operator new" so that it generates 16-bytes-aligned pointers. Fortunately, Eigen provides you with a macro EIGEN_MAKE_ALIGNED_OPERATOR_NEW that does that for you.
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+    bool SolveMyOptimizationProblem(ceres::Problem& problem);
+    bool setSolverParameterSettings();
+
  private:
+ 
+    MPC_cost*  cost1;
+    double x[kPredictionHorizonSteps];
+    ceres::Problem problem;
     // ros node handles
     ros::NodeHandle nh_, private_nh_;
 
