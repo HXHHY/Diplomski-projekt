@@ -1,4 +1,4 @@
-#include <morus_control/attitude_mpc_ctl_node.h>
+#include <morus_control/attitude_mpc_ctl_node_ceres.h>
 
 namespace mav_control_attitude {
     MPCAttitudeControllerNode::MPCAttitudeControllerNode(const ros::NodeHandle& nh,
@@ -358,7 +358,7 @@ namespace mav_control_attitude {
 
 int main(int argc, char **argv)
 {
-
+      google::InitGoogleLogging(argv[0]);
     ros::init(argc, argv, "attitude_mpc_ctl");
 
     // fully initialize the node

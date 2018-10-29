@@ -74,12 +74,28 @@ add_library(attitude_ctl_mpc
         lib/solver.c
 )
 
+add_library(attitude_ctl_mpc_ceres
+        src/attitude_mpc_ctl_ceres.cpp
+        src/steady_state_calculation.cpp
+        src/KFDisturbanceObserver.cpp
+)
+
+
 add_dependencies(attitude_ctl_mpc
         cvxgen_solver_moving_masses
 )
 
+add_dependencies(attitude_ctl_mpc_ceres
+        mpc_mm_ceres
+)
+
 target_link_libraries(attitude_ctl_mpc
         cvxgen_solver_moving_masses
+        ${catkin_LIBRARIES}
+)
+
+target_link_libraries(attitude_ctl_mpc_ceres
+        mpc_mm_ceres
         ${catkin_LIBRARIES}
 )
 
@@ -98,4 +114,17 @@ target_link_libraries(attitude_mpc_ctl_node
         ${catkin_LIBRARIES}
         attitude_ctl_mpc
         cvxgen_solver_moving_masses
+        attitude_teleop_joy)
+        
+add_executable(attitude_mpc_ctl_node_ceres
+        src/nodes/attitude_mpc_ctl_node_ceres.cpp
+        )
+
+add_dependencies(attitude_mpc_ctl_node_ceres
+        ${PROJECT_NAME}_gencfg)
+
+target_link_libraries(attitude_mpc_ctl_node_ceres
+        ${catkin_LIBRARIES}
+        attitude_ctl_mpc_ceres
+        mpc_mm_ceres
         attitude_teleop_joy)
