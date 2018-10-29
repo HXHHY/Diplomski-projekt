@@ -41,8 +41,26 @@ namespace mav_control_attitude {
     }
 
     bool MPCAttitudeController::SolveMyOptimizationProblem(ceres::Problem& problem) {
-      //CHECK(problem != NULL);
-
+      CHECK(problem == NULL) return false;
+      
+      \\Setting bounderies
+      problem_upper_bounderies = last_u;
+      problem_lower_bounderies = last_u;
+      for(int j = 0; j< kPredictionHorizonSteps; j++){
+            for(int i = 0; i< kInputSize; i++){
+                problem_upper_bounderies(i, 0) += du_max(i,0);
+                problem_lower_bounderies(i, 0) += du_min(i,0);
+                
+                if(problem_upper_bounderies(i, 0) > u_max(i,0)) problem_upper_bounderies(i, 0) = u_max(i,0);
+                if(problem_lower_bounderies(i, 0) < u_min(i,0)) problem_lower_bounderies(i, 0) = u_min(i,0);
+                
+                problem.SetParameterLowerBound(x,i*kPredictionHorizonSteps + j, problem_lower_bounderies(i, 0));
+                problem.SetParameterUpperBound(x,i*kPredictionHorizonSteps + j, problem_upper_bounderies(i,0));
+            }
+      
+      
+      }
+      
       // Run the solver!
 
       ceres::Solve(options, &problem, &summary);

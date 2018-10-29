@@ -150,7 +150,7 @@ class MPCAttitudeController {
  private:
  
     MPC_cost*  cost1;
-    double x[kPredictionHorizonSteps];
+    double x[4*kPredictionHorizonSteps];
     ceres::Problem problem;
     ceres::Solver::Options options;
       
@@ -206,6 +206,11 @@ class MPCAttitudeController {
     Eigen::Matrix<double, kInputSize, 1>       du_max; 
     Eigen::Matrix<double, kInputSize, 1>       u_min;
     Eigen::Matrix<double, kInputSize, 1>       du_min;
+    
+    Eigen::Matrix<double, kInputSize, 1>       problem_upper_bounderies;
+    Eigen::Matrix<double, kInputSize, 1>       problem_lower_bounderies;
+
+
     // quadrotor params with moving masses
     double mass_;        // mass of a movable mass
     double mass_quad_;   // mass of the quadrotor body (including gas motors)
