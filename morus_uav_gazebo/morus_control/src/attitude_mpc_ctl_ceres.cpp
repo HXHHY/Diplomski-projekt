@@ -35,7 +35,7 @@ namespace mav_control_attitude {
     MPCAttitudeController::~MPCAttitudeController() { }
     
     bool MPCAttitudeController::setSolverParameterSettings(){
-        options.max_num_iterations = 1000;
+        options.max_num_iterations = 20;
         options.linear_solver_type = ceres::DENSE_QR;
         options.minimizer_progress_to_stdout = false;
     
@@ -391,9 +391,10 @@ namespace mav_control_attitude {
         ROS_INFO_STREAM("Closed loop dynamics = \n" << closed_loop_dynamics);
         ROS_INFO_STREAM("Closed loop eigenvalues absolute value (needed <1) = \n" << closed_loop_dynamics.eigenvalues().cwiseAbs());
       }
-      
+      //R(0,0) = (100*R(0,0));
+      //R(1,1) = (100*R(1,1));
       cost1 = new MPC_cost(  model_A_,  model_B_,  model_Bd_,  Q, Q_final,
-                              R,  R_delta, estimated_disturbances_, kStateSize, kPredictionHorizonSteps);
+                              R,  1*R_delta, estimated_disturbances_, kStateSize, kPredictionHorizonSteps);
       problem.AddResidualBlock(cost1, NULL, x);
       setSolverParameterSettings();
     }
@@ -565,7 +566,7 @@ namespace mav_control_attitude {
       MPC_solver_status_pub_.publish(solver_status_msg);
 
       control_commands_temp_.setZero(); // reset the msg for input signals
-      
+      ROS_INFO_STREAM("solution is :   \n" << solution_found);
       if (solution_found){ // solution found
 
         if (combined_control_mpc_use_) {

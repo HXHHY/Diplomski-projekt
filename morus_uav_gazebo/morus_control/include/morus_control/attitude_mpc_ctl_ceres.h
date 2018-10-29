@@ -35,7 +35,7 @@ namespace mav_control_attitude {
     constexpr int kMeasurementSize = 1;                        // [theta] -> C is [1,6]
     constexpr int kDisturbanceSize = kStateSize;               // disturbances are looked on all states -> B_d is [6,6]
 
-    constexpr int kPredictionHorizonSteps = 20;
+    constexpr int kPredictionHorizonSteps = 12;
     constexpr double kGravity = 9.80665;
 
 class MPCAttitudeController {
@@ -150,7 +150,10 @@ class MPCAttitudeController {
  private:
  
     MPC_cost*  cost1;
-    double x[4*kPredictionHorizonSteps]={};
+    VectorXd v = VectorXd::Random(kInputSize*kPredictionHorizonSteps);
+// vc is the corresponding C array. Here's how you can use it yourself:
+
+    double *x = v.data();
     ceres::Problem problem;
     ceres::Solver::Options options;
       
