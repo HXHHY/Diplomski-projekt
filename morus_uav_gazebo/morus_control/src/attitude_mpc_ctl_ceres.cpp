@@ -44,8 +44,8 @@ namespace mav_control_attitude {
       CHECK(problem == NULL) return false;
       
       \\Setting bounderies
-      problem_upper_bounderies = last_u;
-      problem_lower_bounderies = last_u;
+      problem_upper_bounderies = control_commands_temp_;
+      problem_lower_bounderies = control_commands_temp_;
       for(int j = 0; j< kPredictionHorizonSteps; j++){
             for(int i = 0; i< kInputSize; i++){
                 problem_upper_bounderies(i, 0) += du_max(i,0);
