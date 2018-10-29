@@ -33,6 +33,7 @@ namespace mav_control_attitude {
     }
 
     MPCAttitudeController::~MPCAttitudeController() { }
+    
     bool MPCAttitudeController::setSolverParameterSettings(){
         options.max_num_iterations = 1000;
         options.linear_solver_type = ceres::DENSE_QR;
@@ -394,6 +395,7 @@ namespace mav_control_attitude {
       cost1 = new MPC_cost(  model_A_,  model_B_,  model_Bd_,  Q, Q_final,
                               R,  R_delta, estimated_disturbances_, kStateSize, kPredictionHorizonSteps);
       problem.AddResidualBlock(cost1, NULL, x);
+      setSolverParameterSettings();
     }
 
     void MPCAttitudeController::calculateControlCommand(
@@ -568,7 +570,7 @@ namespace mav_control_attitude {
 
         if (combined_control_mpc_use_) {
           // CC_MPC has 4 input variables
-          // YOLO control_commands_temp_ << vars.u_0[0], vars.u_0[1], vars.u_0[2], vars.u_0[3];
+          control_commands_temp_ << x[0], x[kPredictionHorizonSteps], x[2*kPredictionHorizonSteps],  x[3*kPredictionHorizonSteps];
         } else {
           // MM_MPC has 2 input variables
           // YOLO control_commands_temp_ << vars.u_0[0], vars.u_0[1]; // fill the solution for problem
