@@ -46,6 +46,9 @@ namespace mav_control_attitude {
         options.max_num_iterations = 200;
         options.linear_solver_type = ceres::DENSE_QR;
         options.minimizer_progress_to_stdout = false;
+        options.num_threads = 4;
+        options.initial_trust_region_radius = 1e4;
+        options.max_solver_time_in_seconds = 100;
     
     }
 
@@ -53,6 +56,7 @@ namespace mav_control_attitude {
       //CHECK(&problem == NULL) return false;
       
       //Setting bounderies
+      
       problem_upper_bounderies = control_commands_temp_;
       problem_lower_bounderies = control_commands_temp_;
       for(int j = 0; j< kPredictionHorizonSteps; j++){
@@ -75,7 +79,7 @@ namespace mav_control_attitude {
       ceres::Solve(options, &problem, &summary);
 
       //std::cout << summary.FullReport() << '\n';
-      //std::cout << summary.BriefReport() << '\n';
+      std::cout << summary.BriefReport() << '\n';
     //std::cout << summary.IsSolutionUsable() << '\n';
       return summary.IsSolutionUsable();
     }
@@ -225,26 +229,6 @@ namespace mav_control_attitude {
             ROS_INFO_STREAM("B_d: \n" << model_Bd_);
         }
 
-        //Solver initialization
-        // YOLO set_defaults(); // Set basic algorithm parameters.
-        // YOLO setup_indexing();
-        // YOLO settings_ = settings;
-        // YOLO params_ = params;
-        // YOLO settings_.resid_tol = 0.0001;
-        // YOLO settings_.verbose = 0; // don't show every outcome of computation
-        // YOLO settings_.max_iters = 8;  // reduce the maximum iteration count, to assure quickness over accuracy.
-        //cout << "A" << endl;
-        //cout << model_A_ << endl;
-        //cout << "B" << endl;
-        //cout << model_B_ << endl;
-        //cout << "Bd" << endl;
-        //cout << model_Bd_ << endl;
-        
-        // parameters A, B, Bd for CVXGEN set
-        // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.A), kStateSize, kStateSize) =        model_A_;
-        // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.B), kStateSize, kInputSize) =        model_B_;
-        // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.Bd), kStateSize, kDisturbanceSize) = model_Bd_;
-
         initialized_parameters_ = true;
         ROS_INFO("Linear MPC attitude controller: initialized correctly");
     }
@@ -310,54 +294,13 @@ namespace mav_control_attitude {
       Eigen::MatrixXd temporary_matrix = model_B_.transpose() * Q_final * model_B_ + R;
       LQR_K_ = temporary_matrix.inverse() * (model_B_.transpose() * Q_final * model_A_);
 
-      //cout << "Q"  << endl;
-      //cout << Q << endl;
-      //cout << "P" << endl;
-      //cout << Q_final << endl;
-      //cout << "R" << endl;
-      //cout << R << endl;
-      //cout << "R_delta" << endl;
-      //cout << 100*R_delta << endl;
-      // parameters Q, P, R, R_delta for CVXGEN set
-      // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.Q), kStateSize, kStateSize) = Q;
-      // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.P), kStateSize, kStateSize) = Q_final;
-      // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.R), kInputSize, kInputSize) = R;
-      // YOLO Eigen::Map<Eigen::MatrixXd>(const_cast<double*>(params_.R_delta), kInputSize, kInputSize) = 100*R_delta;
 
-      // constraints for CVXGEN solver set
-      // state constraints TODO how to make work
-      // MM
-      /*
-      params_.x_max[0] = lm_/2 - 0.01;    // x1
-      params_.x_max[1] = 2;               // dx1
-      params_.x_max[2] = lm_/2 - 0.01;    // x3
-      params_.x_max[3] = 2;               // dx3
-      params_.x_max[4] = 1.0;             // theta
-      params_.x_max[5] = 40;              // dtheta
-
-      params_.x_min[0] = -params_.x_max[0];
-      params_.x_min[1] = -params_.x_max[1];
-      params_.x_min[2] = -params_.x_max[2];
-      params_.x_min[3] = -params_.x_max[3];
-      params_.x_min[4] = -params_.x_max[4];
-      params_.x_min[5] = -params_.x_max[5];
-      */
-      //cout << "constraint " << endl;
-      //cout << lm_/2 - 0.01 << endl; 
-      // input constraints
-      // YOLO params_.u_max[0] = lm_/2 - 0.01;
-      // YOLO params_.u_max[1] = lm_/2 - 0.01;
-      // YOLO params_.u_min[0] = -params_.u_max[0];
-      // YOLO params_.u_min[1] = -params_.u_max[1];
         
       u_max(0,0) =  lm_/2 - 0.01; 
       u_max(1,0) =  lm_/2 - 0.01;
       u_min(0,0) =  -u_max(0,0); 
       u_min(1,0) =  -u_max(1,0); 
-      // YOLO params_.du_max[0] = sampling_time_ * 2; // constraint of 2 m/s
-      // YOLO params_.du_max[1] = sampling_time_ * 2;
-      // YOLO params_.du_min[0] = -params_.du_max[0];
-      // YOLO params_.du_min[1] = -params_.du_max[1];
+
 
       du_max(0,0) =  sampling_time_ * 2; 
       du_max(1,0) =  sampling_time_ * 2;
@@ -365,20 +308,12 @@ namespace mav_control_attitude {
       du_min(1,0) =  -du_max(1,0); 
 
       if (combined_control_mpc_use_){
-        // YOLO params_.u_max[2] = 50;
-        // YOLO params_.u_max[3] = 50;
-        // YOLO params_.u_min[2] = -params_.u_max[2];
-        // YOLO params_.u_min[3] = -params_.u_max[3];
-        
+       
         u_max(2,0) =  50; 
         u_max(3,0) =  50;
         u_min(2,0) =  -u_max(2,0); 
         u_min(3,0) =  -u_max(3,0);
-        
-        // YOLO params_.du_max[2] = 1;
-        // YOLO params_.du_max[3] = 1;
-        // YOLO params_.du_min[2] = -params_.du_max[2];
-        // YOLO params_.du_min[3] = -params_.du_max[3];
+
         
         du_max(2,0) =  1; 
         du_max(3,0) =  1;
@@ -400,9 +335,14 @@ namespace mav_control_attitude {
         ROS_INFO_STREAM("Closed loop eigenvalues absolute value (needed <1) = \n" << closed_loop_dynamics.eigenvalues().cwiseAbs());
       }
       if( isnan( Q_final.maxCoeff() ))  Q_final = 0.5*MatrixXd::Identity(kStateSize, kStateSize);
-      Q_final = 100*MatrixXd::Identity(kStateSize, kStateSize);
+      
+      Q_final = 0.07*MatrixXd::Identity(kStateSize, kStateSize);
+      Q = Q_final;
+      R = 0.07*MatrixXd::Identity(model_B_.cols(), model_B_.cols());
+      R_delta = R;
+
       cost1 = new MPC_cost(  model_A_,  model_B_,  model_Bd_,  Q, Q_final,
-                              R,  1*R_delta, estimated_disturbances_, kStateSize, kPredictionHorizonSteps);
+                              R,  R_delta, estimated_disturbances_, kStateSize, kPredictionHorizonSteps);
       problem.AddResidualBlock(cost1, NULL, x);
       setSolverParameterSettings();
       
@@ -534,28 +474,6 @@ namespace mav_control_attitude {
       if (!getControllerName().compare("Pitch controller") && verbose_){
         ROS_INFO_STREAM("target_states = \n" << target_state);
       }
-      //cout << "x_ss target state" << endl;
-      //cout << target_state << endl;
-      //cout << "u_ss target input" << endl;
-      //cout << target_input << endl;
-      
-      // fill in the structure for CVXGEN solver - x_ss[t], u_ss, x_0, d, u_prev
-      for (int i = 1; i < 11; i++) {
-        // YOLO Eigen::Map<Eigen::Matrix<double, kStateSize, 1>>(const_cast<double*>(params_.x_ss[i])) = target_state;
-      }
-      for (int i = 0; i < 10; i++) {
-        // YOLO Eigen::Map<Eigen::Matrix<double, kInputSize, 1>>(const_cast<double*>(params_.u_ss[i])) = target_input;
-      }
-      //cout << "x0 current state" << endl;
-      //cout << current_state << endl;
-      //cout << "d estimated dsturbance " << endl;
-      //cout << estimated_disturbances_ << endl;
-      //cout << "u previous" << endl;
-      //cout << control_commands_temp_ << endl;
-      // YOLO Eigen::Map<Eigen::Matrix<double, kStateSize,       1>>(const_cast<double*>(params_.x_0))    = current_state;
-      // YOLO Eigen::Map<Eigen::Matrix<double, kDisturbanceSize, 1>>(const_cast<double*>(params_.d  ))    = estimated_disturbances_;
-      // YOLO Eigen::Map<Eigen::Matrix<double, kInputSize,       1>>(const_cast<double*>(params_.u_prev)) = control_commands_temp_;
-
 
 
       cost1->set_disturbance(estimated_disturbances_);
@@ -564,13 +482,7 @@ namespace mav_control_attitude {
       cost1->set_u_past(control_commands_temp_);
       cost1->set_x0_(current_state);
 
-      // fill the extern structure for the solver
-      // YOLO settings = settings_;
-      // YOLO params = params_;
 
-      // solve the problem quadratic problem
-      // YOLO solver_status_ = (int) solve();
-      // publish the solver status
       std_msgs::Int64 solver_status_msg;
       bool solution_found = SolveMyOptimizationProblem(problem);
       solver_status_msg.data = 0; 
@@ -584,9 +496,14 @@ namespace mav_control_attitude {
         if (combined_control_mpc_use_) {
           // CC_MPC has 4 input variables
           control_commands_temp_ << x[0], x[kPredictionHorizonSteps], x[2*kPredictionHorizonSteps],  x[3*kPredictionHorizonSteps];
+          for(int i = 0; i< kPredictionHorizonSteps-1; i++){
+            x[0 + i] =  x[ i+1];
+             x[kPredictionHorizonSteps + i] = x[kPredictionHorizonSteps +i +1];
+              x[2*kPredictionHorizonSteps + i] = x[2*kPredictionHorizonSteps + i +1];
+                x[3*kPredictionHorizonSteps + i] = x[3*kPredictionHorizonSteps + i +1];
+          }
         } else {
-          // MM_MPC has 2 input variables
-          // YOLO control_commands_temp_ << vars.u_0[0], vars.u_0[1]; // fill the solution for problem
+
         }
       }
       else { // solution not found -> LQR working

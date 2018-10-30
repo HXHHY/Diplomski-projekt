@@ -49,7 +49,8 @@ class MPCAttitudeController {
     VectorXd v = VectorXd::Random(kInputSize*kPredictionHorizonSteps);
 // vc is the corresponding C array. Here's how you can use it yourself:
 
-    double *x = v.data();
+    //double *x = v.data();
+    double x[kInputSize*kPredictionHorizonSteps] = {0};
     ceres::Problem problem;
     ceres::Solver::Options options;
       
