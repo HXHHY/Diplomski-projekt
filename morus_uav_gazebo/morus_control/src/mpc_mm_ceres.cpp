@@ -10,6 +10,7 @@ MPC_cost::MPC_cost( MatrixXd A, MatrixXd B, MatrixXd Bd, MatrixXd Q,
                 u = MatrixXd::Zero(B_.cols(), 1);
                 u_past = MatrixXd::Zero(B_.cols(), 1);
                 u_current = MatrixXd::Zero(B_.cols(), 1);
+                u_ss_ = MatrixXd::Zero(B_.cols(), 1);
                 lambdas_x = MatrixXd::Zero(A_.rows(), horizon);
                 lambdas_u = MatrixXd::Zero(B_.cols(), horizon);
                 lambdas_u_ref = MatrixXd::Zero(B_.cols(), horizon);
@@ -31,7 +32,8 @@ bool MPC_cost::Evaluate(double const* const* x,
                
         x_states.block(0,0,x0_.rows(), x0_.cols()) = x0_;
         
-        u_past.block(0,0,u_current.rows(), u_current.cols())= u_current;
+        //u_past.block(0,0,u_current.rows(), u_current.cols())= u_current;
+
        //bilo je horizon -1
         for (int i = 0; i< horizon; i++){
             u << x[0][0*horizon + (i)], x[0][1*horizon+(i)],           
@@ -41,18 +43,19 @@ bool MPC_cost::Evaluate(double const* const* x,
             x_states.block(0,i+1,x0_.rows(), x0_.cols()) = A_ * x_states.block(0,i,x0_.rows(), x0_.cols()) + B_*u + insecure_;
             lambdas_x.block(0,i,x0_.rows(), x0_.cols())  = -1*x_ss_ + x_states.block(0,i,x0_.rows(), x0_.cols());
             lambdas_u.block(0,i,u.rows(), u.cols()) = u - u_past;
-            lambdas_u_ref.block(0,i,u.rows(), u.cols()) = u - u_current;
-            deriv_wrt_u.block(0,i,u.rows(), u.cols()) =(2*u.transpose()*R_).transpose() + (4*u.transpose()*R_delta_).transpose()
-                                         + (-1*R_delta_*u_past) + (-1*u_past.transpose()*R_delta_).transpose();
-            if(i > 0){ deriv_wrt_u.block(0,i-1,u.rows(), u.cols()) =(deriv_wrt_u.block(0,i-1,u.rows(), u.cols()) + (-1*u.transpose()*R_delta_).transpose() -1*R_delta_*u).eval();}
+            lambdas_u_ref.block(0,i,u.rows(), u.cols()) = u - u_ss_;
+            
+            deriv_wrt_u.block(0,i,u.rows(), u.cols()) =(2*R_*u) -2*R_*u_ss_  + (4*R_delta_*u)+ (-2*R_delta_*u_past);
+            
+            if(i > 0){ deriv_wrt_u.block(0,i-1,u.rows(), u.cols()) =(deriv_wrt_u.block(0,i-1,u.rows(), u.cols()) -2*R_delta_*u).eval();}
             
             u_past.block(0,0,u.rows(), u.cols()) = u;
         }
         
         residuum = ((lambdas_x.cwiseProduct(Q_*lambdas_x)).sum() + (lambdas_u_ref.cwiseProduct(R_*lambdas_u_ref)).sum()                 + (lambdas_u.cwiseProduct(R_delta_*lambdas_u)).sum()     +((-x_ss_ + x_states.block(0,horizon,x0_.rows(),x0_.cols())).transpose()*Q_final_*(-x_ss_ + x_states.block(0,horizon,x0_.rows(),x0_.cols()))).sum() );
 
-        
-        
+        //cout << " residuum "<<residuum << "  "<<isnan(residuum) << endl;
+        if(isnan(residuum)) residuum = 9e50;
 
         residuals[0] = residuum;
 

@@ -25,6 +25,8 @@
 // CVXGEN solver
 // YOLO #include <morus_control/solver.h>
 #include <morus_control/mpc_mm_ceres.h>
+
+
 namespace mav_control_attitude {
 
     constexpr int combined_control_mpc_use_ = 1;  // still working with moving masses
@@ -42,6 +44,16 @@ class MPCAttitudeController {
  public:
     MPCAttitudeController(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh);
     ~MPCAttitudeController();
+
+    MPC_cost*  cost1;
+    VectorXd v = VectorXd::Random(kInputSize*kPredictionHorizonSteps);
+// vc is the corresponding C array. Here's how you can use it yourself:
+
+    double *x = v.data();
+    ceres::Problem problem;
+    ceres::Solver::Options options;
+      
+    ceres::Solver::Summary summary;
 
     // After dynamic change update the parameters
     void applyParameters();
@@ -149,15 +161,7 @@ class MPCAttitudeController {
 
  private:
  
-    MPC_cost*  cost1;
-    VectorXd v = VectorXd::Random(kInputSize*kPredictionHorizonSteps);
-// vc is the corresponding C array. Here's how you can use it yourself:
-
-    double *x = v.data();
-    ceres::Problem problem;
-    ceres::Solver::Options options;
-      
-    ceres::Solver::Summary summary;
+    
     // ros node handles
     ros::NodeHandle nh_, private_nh_;
 
