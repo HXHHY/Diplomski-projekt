@@ -59,7 +59,7 @@ bool MPC_cost::Evaluate(double const* const* x,
 
         if (jacobians != NULL) {
                 if (jacobians[0] != NULL) {
-                    for(int i = 0; i<4; i++){
+                    for(int i = 0; i<num_params_; i++){
                         for(int j = 0; j< horizon; j++){
                             jacobians[0][i*horizon + j] = deriv_wrt_u(i,j);
                             }
