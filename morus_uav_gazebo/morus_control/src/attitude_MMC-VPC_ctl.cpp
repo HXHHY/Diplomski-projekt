@@ -3,7 +3,7 @@
 // master thesis
 // author: Luka Pevec
 
-#include <morus_control/attitude_mpc_ctl_ceres.h>
+#include <morus_control/attitude_mpc-vpc_ctl.h>
 using namespace std; 
 using namespace Eigen;
 
@@ -495,12 +495,12 @@ namespace mav_control_attitude {
 
         if (combined_control_mpc_use_) {
           // CC_MPC has 4 input variables
-          control_commands_temp_ << x[0], x[kPredictionHorizonSteps], x[2*kPredictionHorizonSteps],  x[3*kPredictionHorizonSteps];
+          control_commands_temp_ << x[0], x[kPredictionHorizonSteps];
           for(int i = 0; i< kPredictionHorizonSteps-1; i++){
-            x[0 + i] =  x[ i+1];
-             x[kPredictionHorizonSteps + i] = x[kPredictionHorizonSteps +i +1];
-              x[2*kPredictionHorizonSteps + i] = x[2*kPredictionHorizonSteps + i +1];
-                x[3*kPredictionHorizonSteps + i] = x[3*kPredictionHorizonSteps + i +1];
+		for(int j=0; j< kStateSize; j++)
+  
+             x[j*kPredictionHorizonSteps + i] = x[j*kPredictionHorizonSteps +i +1];
+
           }
         } else {
 

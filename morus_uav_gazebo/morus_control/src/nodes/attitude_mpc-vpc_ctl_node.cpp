@@ -1,4 +1,4 @@
-#include <morus_control/attitude_mpc_ctl_node_ceres.h>
+#include <morus_control/attitude_mpc-vpc_ctl_node.h>
 
 namespace mav_control_attitude {
     MPCAttitudeControllerNode::MPCAttitudeControllerNode(const ros::NodeHandle& nh,

@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     morus_msgs
     dynamic_reconfigure
+    mav_msgs
+    ceres_mpc
 )
 
 # check c++11 / c++0x
@@ -26,45 +28,18 @@ else()
     message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-find_package(cmake_modules REQUIRED)
-
-find_package(cmake_modules REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(Ceres REQUIRED)
-
-include_directories(${catkin_INCLUDE_DIRS})
-include_directories(${EIGEN3_INCLUDE_DIR})
-include_directories(${CERES_INCLUDE_DIRS})
-
-add_definitions(${EIGEN_DEFINITIONS})
+include_directories(
+    include
+    ${catkin_INCLUDE_DIRS}
+    #${ceres_mpc_INCLUDE_DIRS}
+    )
 
 # dynamic reconfigurer
 generate_dynamic_reconfigure_options(config/LinearMPC.cfg)
 include_directories(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
 
-catkin_package(
-    INCLUDE_DIRS 
-        include 
-        lib 
-        src 
-        config
-        ${catkin_INCLUDE_DIRS}
-        ${EIGEN3_INCLUDE_DIR}
-        ${CERES_INCLUDE_DIRS}
-    LIBRARIES morus_control
-    CATKIN_DEPENDS
-        roscpp
-    DEPENDS
-        cmake_modules
-        Eigen3
-        Ceres 
-)
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-  lib
-)
+
 
 install(DIRECTORY config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
@@ -76,15 +51,8 @@ install(DIRECTORY launch
 # LIBRARIES #
 #############
 
-add_library(mpc_mm_ceres
-        src/mpc_mm_ceres.cpp
-        include/morus_control/mpc_mm_ceres.h
 
-)
 
-target_link_libraries(mpc_mm_ceres
- ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EIGEN_LIBRARIES}
-)
 
 
 # convex solver - CVXGEN
@@ -104,12 +72,6 @@ add_library(attitude_ctl_mpc
         lib/solver.c
 )
 
-add_library(attitude_ctl_mpc_ceres
-        src/attitude_mpc_ctl_ceres.cpp
-        src/steady_state_calculation.cpp
-        src/KFDisturbanceObserver.cpp
-        #include/morus_control/attitude_ctl_mpc_ceres.h
-)
 
 
 add_dependencies(attitude_ctl_mpc
@@ -123,10 +85,7 @@ target_link_libraries(attitude_ctl_mpc
         ${catkin_LIBRARIES}
 )
 
-target_link_libraries(attitude_ctl_mpc_ceres
-        mpc_mm_ceres
-        ${catkin_LIBRARIES}
-)
+
 
 add_library(attitude_teleop_joy
         src/attitude_teleop_joy.cpp
@@ -145,15 +104,33 @@ target_link_libraries(attitude_mpc_ctl_node
         cvxgen_solver_moving_masses
         attitude_teleop_joy)
         
-add_executable(attitude_mpc_ctl_node_ceres
-        src/nodes/attitude_mpc_ctl_node_ceres.cpp
+
+add_library(attitude_teleop_joy
+        src/attitude_teleop_joy.cpp
         )
 
+# CERES mpc library
+add_library(attitude_ctl_mpc_ceres
+        src/attitude_mpc_ctl_ceres.cpp
+        src/steady_state_calculation.cpp
+        src/KFDisturbanceObserver.cpp
+)
+
+target_link_libraries(attitude_ctl_mpc_ceres
+        #${ceres_mpc_LIBRARIES}
+        ${catkin_LIBRARIES}
+        glog
+        cxsparse
+        cholmod)
+
+
+
+add_executable(attitude_mpc_ctl_node_ceres
+        src/nodes/attitude_mpc_ctl_node_ceres.cpp)
 add_dependencies(attitude_mpc_ctl_node_ceres
         ${PROJECT_NAME}_gencfg)
-
 target_link_libraries(attitude_mpc_ctl_node_ceres
         ${catkin_LIBRARIES}
+        #${ceres_mpc_LIBRARIES}
         attitude_ctl_mpc_ceres
-        mpc_mm_ceres
         attitude_teleop_joy)

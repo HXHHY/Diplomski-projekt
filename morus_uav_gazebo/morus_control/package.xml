@@ -7,7 +7,7 @@
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="bruno@todo.todo">bruno</maintainer>
+  <maintainer email="branko.rados@fer.hr">branko</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -17,43 +17,39 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+
+ <build_depend>libceres-dev</build_depend>
+  <build_depend>suitesparse</build_depend>
+  <build_depend>protobuf-dev</build_depend>
+  <build_depend>ceres_mpc</build_depend>
+  <build_depend>libgflags-dev</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>mav_msgs</build_depend>
   <build_depend>cmake_modules</build_depend>
   <build_depend>controller_spawner</build_depend>
   <build_depend>morus_uav_ros_msgs</build_depend>
   <build_depend>morus_msgs</build_depend>
   <build_depend>message_generation</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>dynamic_reconfigure</build_depend>
 
-  <run_depend>dynamic_reconfigure</run_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <run_depend>ceres_mpc</run_depend>
+  <run_depend>libgflags-dev</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>mav_msgs</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>morus_msgs</run_depend>
   <run_depend>morus_uav_ros_msgs</run_depend>
   <run_depend>controller_spawner</run_depend>
   <run_depend>cmake_modules</run_depend>
-
-
- <build_depend>libceres-dev</build_depend>
-  <build_depend>libgflags-dev</build_depend>
-  <build_depend>suitesparse</build_depend>
-  <build_depend>protobuf-dev</build_depend>
-
-
-
- <run_depend>libgflags-dev</run_depend>
   <run_depend>libceres-dev</run_depend>
   <run_depend>suitesparse</run_depend>
   <run_depend>protobuf-dev</run_depend>
 
-
-
-
-  <build_depend>rospy</build_depend>
-  <build_depend>std_msgs</build_depend>
-
-  <run_depend>rospy</run_depend>
-  <run_depend>std_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

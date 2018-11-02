@@ -34,10 +34,11 @@ bool MPC_cost::Evaluate(double const* const* x,
         u_past.block(0,0,u_current.rows(), u_current.cols())= u_current;
        //bilo je horizon -1
         for (int i = 0; i< horizon; i++){
-            u << x[0][0*horizon + (i)], x[0][1*horizon+(i)],           
-                 x[0][2*horizon + (i)], x[0][3*horizon + (i)];
-
-
+		
+		for(int j = 0; j < num_params_; j++){
+		    u(j,0) = x[0][j*horizon + (i)],           
+		       
+		}
             x_states.block(0,i+1,x0_.rows(), x0_.cols()) = A_ * x_states.block(0,i,x0_.rows(), x0_.cols()) + B_*u + insecure_;
             lambdas_x.block(0,i,x0_.rows(), x0_.cols())  = -1*x_ss_ + x_states.block(0,i,x0_.rows(), x0_.cols());
             lambdas_u.block(0,i,u.rows(), u.cols()) = u - u_past;
